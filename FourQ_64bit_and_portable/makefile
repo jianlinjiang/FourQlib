@@ -1,7 +1,7 @@
 ####  Makefile for compilation using GNU GCC or clang  ####
 
 OPT=-O3     # Optimization option by default
-
+AR=ar
 CC=gcc
 ifeq "$(CC)" "gcc"
     COMPILER=gcc
@@ -112,13 +112,18 @@ OBJECTS_FP_TEST=fp_tests.o $(OBJECTS) test_extras.o
 OBJECTS_ECC_TEST=ecc_tests.o $(OBJECTS) test_extras.o 
 OBJECTS_CRYPTO_TEST=crypto_tests.o $(OBJECTS) test_extras.o 
 OBJECTS_ALL=$(OBJECTS) $(OBJECTS_FP_TEST) $(OBJECTS_ECC_TEST) $(OBJECTS_CRYPTO_TEST)
-
-all: crypto_test ecc_test fp_test $(SHARED_LIB_O)
+OBJECTS_RS=rsfourq.o $(OBJECTS)
+SHARED_LIB_RS_TARGET=libRsFourQ.a
+SHARED_LIB_RS_O=$(SHARED_LIB_RS_TARGET)
+all: crypto_test ecc_test fp_test $(SHARED_LIB_O) $(SHARED_LIB_RS_O)
 
 ifeq "$(SHARED_LIB)" "TRUE"
     $(SHARED_LIB_O): $(OBJECTS)
 	    $(CC) -shared -o $(SHARED_LIB_O) $(OBJECTS)
 endif
+
+$(SHARED_LIB_RS_O): $(OBJECTS_RS)
+	$(AR) crus $(SHARED_LIB_RS_TARGET) $(OBJECTS_RS) $(ARM_SETTING)
 
 crypto_test: $(OBJECTS_CRYPTO_TEST)
 	$(CC) -o crypto_test $(OBJECTS_CRYPTO_TEST) $(ARM_SETTING)
@@ -134,6 +139,9 @@ eccp2_core.o: eccp2_core.c AMD64/fp_x64.h
 
 eccp2.o: eccp2.c
 	$(CC) $(CFLAGS) eccp2.c
+
+rsfourq.o: rsfourq.c
+	$(CC) $(CFLAGS) rsfourq.c
 
 eccp2_no_endo.o: eccp2_no_endo.c
 	$(CC) $(CFLAGS) eccp2_no_endo.c
@@ -184,5 +192,5 @@ fp_tests.o: tests/fp_tests.c
 .PHONY: clean
 
 clean:
-	rm -rf $(SHARED_LIB_TARGET) crypto_test ecc_test fp_test *.o AMD64/consts.s
+	rm -rf $(SHARED_LIB_TARGET) crypto_test ecc_test fp_test *.o AMD64/consts.s $(SHARED_LIB_RS_TARGET)
 
