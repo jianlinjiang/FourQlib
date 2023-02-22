@@ -23,7 +23,8 @@ int oprf_hash_and_encrypt(const uint8_t* data, const size_t data_len, const uint
     if (!ecc_mul(P, (digit_t*)s_plain, P, false)) {
         return ECCRYPTO_ERROR;
     }
-    memcpy(res, &P, sizeof(point_t));
+    encode(P, res);
+    // memcpy(res, &P, sizeof(point_t));
     return ECCRYPTO_SUCCESS;
 }
 
@@ -54,6 +55,20 @@ int oprf_encrypt(const uint8_t* point, const size_t point_len, const uint8_t* sk
     }
 
     memcpy(res, &P, sizeof(point_t));
+    return ECCRYPTO_SUCCESS;
+}
+
+int oprf_encrypt_compressed(const uint8_t* compressed_point, const size_t point_len, const uint8_t* sk, uint8_t* res) {
+    point_t P;
+    if (point_len != sizeof(point_t) / 2) { return ECCRYPTO_ERROR; }
+    decode(compressed_point, P);
+    digit_t s[4], s_plain[4];
+    to_Montgomery((const digit_t*)sk, s);
+    from_Montgomery(s, s_plain);
+    if (!ecc_mul(P, (digit_t*)s_plain, P, false)) {
+        return ECCRYPTO_ERROR;
+    }
+    encode(P, res);
     return ECCRYPTO_SUCCESS;
 }
 
